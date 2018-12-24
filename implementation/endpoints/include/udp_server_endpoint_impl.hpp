@@ -6,8 +6,7 @@
 #ifndef VSOMEIP_INTERNAL_UDP_SERVICE_IMPL_HPP
 #define VSOMEIP_INTERNAL_UDP_SERVICE_IMPL_HPP
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/udp_ext.hpp>
+#include "../../platform/platform.hpp"
 
 #include <vsomeip/defines.hpp>
 
@@ -17,7 +16,7 @@
 namespace vsomeip {
 
 typedef server_endpoint_impl<
-            boost::asio::ip::udp_ext
+            platform::udp_ext
         > udp_server_endpoint_base_impl;
 
 class udp_server_endpoint_impl: public udp_server_endpoint_base_impl {
@@ -25,7 +24,7 @@ class udp_server_endpoint_impl: public udp_server_endpoint_base_impl {
 public:
     udp_server_endpoint_impl(std::shared_ptr<endpoint_host> _host,
                              endpoint_type _local,
-                             boost::asio::io_service &_io,
+							 platform::io_service &_io,
                              configuration::endpoint_queue_limit_t _queue_limit);
     virtual ~udp_server_endpoint_impl();
 
@@ -51,9 +50,9 @@ public:
 
     client_t get_client(std::shared_ptr<endpoint_definition> _endpoint);
 
-    void receive_cbk(boost::system::error_code const &_error,
+    void receive_cbk(int const &_error,
                      std::size_t _size,
-                     boost::asio::ip::address const &_destination);
+					 platform::ip_address const &_destination);
 
     void print_status();
 

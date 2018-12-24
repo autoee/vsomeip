@@ -11,8 +11,7 @@
 #include <mutex>
 #include <atomic>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/steady_timer.hpp>
+#include "../../platform/platform.hpp"
 
 #include "buffer.hpp"
 #include "endpoint.hpp"
@@ -29,7 +28,7 @@ public:
 
     endpoint_impl(std::shared_ptr<endpoint_host> _adapter,
                   endpoint_type _local,
-                  boost::asio::io_service &_io,
+                  platform::io_service &_io,
                   std::uint32_t _max_message_size,
                   configuration::endpoint_queue_limit_t _queue_limit);
     virtual ~endpoint_impl();
@@ -67,7 +66,7 @@ protected:
 
 protected:
     // Reference to service context
-    boost::asio::io_service &service_;
+    platform::io_service &service_;
 
     // Reference to host
     std::weak_ptr<endpoint_host> host_;

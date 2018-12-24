@@ -6,15 +6,12 @@
 #ifndef VSOMEIP_SERVICE_DISCOVERY_HPP
 #define VSOMEIP_SERVICE_DISCOVERY_HPP
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/address.hpp>
-
 #include <vsomeip/primitive_types.hpp>
 #include <vsomeip/enumeration_types.hpp>
 #include "../../routing/include/serviceinfo.hpp"
 #include "../../endpoints/include/endpoint.hpp"
+#include "../../platform/platform.hpp"
 #include "../include/service_discovery_host.hpp"
-
 namespace vsomeip {
 
 class configuration;
@@ -27,7 +24,7 @@ public:
     }
 
     virtual std::shared_ptr<configuration> get_configuration() const = 0;
-    virtual boost::asio::io_service & get_io() = 0;
+    virtual platform::io_service & get_io() = 0;
 
     virtual void init() = 0;
     virtual void start() = 0;
@@ -49,8 +46,8 @@ public:
     virtual bool send(bool _is_announcing) = 0;
 
     virtual void on_message(const byte_t *_data, length_t _length,
-            const boost::asio::ip::address &_sender,
-            const boost::asio::ip::address &_destination) = 0;
+            const platform::ip::address &_sender,
+            const platform::ip::address &_destination) = 0;
 
     virtual void send_subscriptions(service_t _service, instance_t _instance,
             client_t _client, bool _reliable) = 0;

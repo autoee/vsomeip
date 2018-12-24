@@ -79,7 +79,7 @@ std::shared_ptr<configuration> service_discovery_impl::get_configuration() const
     return host_->get_configuration();
 }
 
-boost::asio::io_service & service_discovery_impl::get_io() {
+platform::io_service & service_discovery_impl::get_io() {
     return io_;
 }
 
@@ -91,8 +91,8 @@ void service_discovery_impl::init() {
     if (its_configuration) {
         unicast_ = its_configuration->get_unicast_address();
         sd_multicast_ = its_configuration->get_sd_multicast();
-        boost::system::error_code ec;
-        sd_multicast_address_ = boost::asio::ip::address::from_string(sd_multicast_, ec);
+        int ec;
+        sd_multicast_address_ = platform::ip::address::from_string(sd_multicast_, ec);
 
         port_ = its_configuration->get_sd_port();
         reliable_ = (its_configuration->get_sd_protocol()
@@ -264,7 +264,7 @@ void service_discovery_impl::subscribe(service_t _service, instance_t _instance,
     std::shared_ptr < endpoint > its_unreliable;
     std::shared_ptr < endpoint > its_reliable;
     bool has_address(false);
-    boost::asio::ip::address its_address;
+    platform::ip::address its_address;
 
     get_subscription_endpoints(its_unreliable, its_reliable,
             &its_address, &has_address, _service, _instance, _client);
@@ -351,7 +351,7 @@ void service_discovery_impl::subscribe(service_t _service, instance_t _instance,
 
 void service_discovery_impl::get_subscription_endpoints(
         std::shared_ptr<endpoint>& _unreliable,
-        std::shared_ptr<endpoint>& _reliable, boost::asio::ip::address* _address,
+        std::shared_ptr<endpoint>& _reliable, platform::ip::address* _address,
         bool* _has_address,
         service_t _service, instance_t _instance, client_t _client) const {
     _reliable = host_->find_or_create_remote_client(_service, _instance,
@@ -384,7 +384,7 @@ void service_discovery_impl::unsubscribe(service_t _service,
         return;
     }
     std::shared_ptr < message_impl > its_message = its_runtime->create_message();
-    boost::asio::ip::address its_address;
+    platform::ip::address its_address;
     bool has_address(false);
     {
         std::lock_guard<std::mutex> its_lock(subscribed_mutex_);
@@ -464,8 +464,7 @@ void service_discovery_impl::unsubscribe_client(service_t _service,
     if (!its_runtime) {
         return;
     }
-    std::shared_ptr < message_impl > its_message = its_runtime->create_message();
-    boost::asio::ip::address its_address;
+    std::shared_ptr < message_impl > its_message = its_runtime->create_platform    platform::ip::address its_address;
     bool has_address(false);
     {
         std::lock_guard<std::mutex> its_lock(subscribed_mutex_);
@@ -524,7 +523,7 @@ void service_discovery_impl::unsubscribe_client(service_t _service,
 }
 
 std::pair<session_t, bool> service_discovery_impl::get_session(
-        const boost::asio::ip::address &_address) {
+        const platform::ip::address &_address) {
     std::pair<session_t, bool> its_session;
     auto found_session = sessions_sent_.find(_address);
     if (found_session == sessions_sent_.end()) {
@@ -536,7 +535,7 @@ std::pair<session_t, bool> service_discovery_impl::get_session(
 }
 
 void service_discovery_impl::increment_session(
-        const boost::asio::ip::address &_address) {
+        const platform::ip::address &_address) {
     auto found_session = sessions_sent_.find(_address);
     if (found_session != sessions_sent_.end()) {
         found_session->second.first++;
@@ -547,8 +546,8 @@ void service_discovery_impl::increment_session(
 }
 
 bool service_discovery_impl::is_reboot(
-        const boost::asio::ip::address &_sender,
-        const boost::asio::ip::address &_destination,
+        const platform::ip::address &_sender,
+        const platform::ip::address &_destination,
         bool _reboot_flag, session_t _session) {
     bool result(false);
 
@@ -690,7 +689,7 @@ void service_discovery_impl::assign_ip_option_to_entry(
 void service_discovery_impl::insert_option(
         std::shared_ptr<message_impl> &_message,
         std::shared_ptr<entry_impl> _entry,
-        const boost::asio::ip::address &_address, uint16_t _port,
+        const platform::ip::address &_address, uint16_t _port,
         bool _is_reliable) {
     layer_four_protocol_e its_protocol =
             _is_reliable ? layer_four_protocol_e::TCP :
@@ -1090,7 +1089,7 @@ void service_discovery_impl::insert_subscription_ack(
         its_entry->add_target(_target);
     }
 
-    boost::asio::ip::address its_address;
+    platform::ip::address its_address;
     uint16_t its_port;
     if (_info->get_multicast(its_address, its_port)) {
         insert_option(_message, its_entry, its_address, its_port, false);
@@ -1140,8 +1139,8 @@ bool service_discovery_impl::send(bool _is_announcing) {
 
 // Interface endpoint_host
 void service_discovery_impl::on_message(const byte_t *_data, length_t _length,
-        const boost::asio::ip::address &_sender,
-        const boost::asio::ip::address &_destination) {
+        const platform::ip::address &_sender,
+        const platform::ip::address &_destination) {
 #if 0
     std::stringstream msg;
     msg << "sdi::on_message: ";
@@ -1160,7 +1159,7 @@ void service_discovery_impl::on_message(const byte_t *_data, length_t _length,
     }
     if (_destination == sd_multicast_address_) {
         std::lock_guard<std::mutex> its_lock(last_msg_received_timer_mutex_);
-        boost::system::error_code ec;
+        int ec;
         last_msg_received_timer_.cancel(ec);
         last_msg_received_timer_.expires_from_now(last_msg_received_timer_timeout_, ec);
         last_msg_received_timer_.async_wait(
@@ -1294,10 +1293,10 @@ void service_discovery_impl::process_serviceentry(
     ttl_t its_ttl = _entry->get_ttl();
 
     // Read address info from options
-    boost::asio::ip::address its_reliable_address;
+    platform::ip::address its_reliable_address;
     uint16_t its_reliable_port(ILLEGAL_PORT);
 
-    boost::asio::ip::address its_unreliable_address;
+    platform::ip::address its_unreliable_address;
     uint16_t its_unreliable_port(ILLEGAL_PORT);
 
     for (auto i : { 1, 2 }) {
@@ -1311,7 +1310,7 @@ void service_discovery_impl::process_serviceentry(
                             std::dynamic_pointer_cast < ipv4_option_impl
                                     > (its_option);
 
-                    boost::asio::ip::address_v4 its_ipv4_address(
+                    platform::ip::address_v4 its_ipv4_address(
                             its_ipv4_option->get_address());
 
                     if (its_ipv4_option->get_layer_four_protocol()
@@ -1331,7 +1330,7 @@ void service_discovery_impl::process_serviceentry(
                             std::dynamic_pointer_cast < ipv6_option_impl
                                     > (its_option);
 
-                    boost::asio::ip::address_v6 its_ipv6_address(
+                    platform::ip::address_v6 its_ipv6_address(
                             its_ipv6_option->get_address());
 
                     if (its_ipv6_option->get_layer_four_protocol()
@@ -1397,9 +1396,9 @@ void service_discovery_impl::process_serviceentry(
 void service_discovery_impl::process_offerservice_serviceentry(
         service_t _service, instance_t _instance, major_version_t _major,
         minor_version_t _minor, ttl_t _ttl,
-        const boost::asio::ip::address &_reliable_address,
+        const platform::ip::address &_reliable_address,
         uint16_t _reliable_port,
-        const boost::asio::ip::address &_unreliable_address,
+        const platform::ip::address &_unreliable_address,
         uint16_t _unreliable_port,
         std::vector<std::pair<std::uint16_t, std::shared_ptr<message_impl>>>* _resubscribes) {
     std::shared_ptr < runtime > its_runtime = runtime_.lock();
@@ -1469,7 +1468,7 @@ void service_discovery_impl::process_offerservice_serviceentry(
                         std::shared_ptr<endpoint> its_unreliable;
                         std::shared_ptr<endpoint> its_reliable;
                         bool has_address(false);
-                        boost::asio::ip::address its_address;
+                        platform::ip::address its_address;
                         get_subscription_endpoints(
                                 its_unreliable, its_reliable, &its_address,
                                 &has_address, _service, _instance,
@@ -1702,7 +1701,7 @@ void service_discovery_impl::on_endpoint_connected(
 
     std::shared_ptr<message_impl> its_message(its_runtime->create_message());
     bool has_address(false);
-    boost::asio::ip::address its_address;
+    platform::ip::address its_address;
 
     {
         std::lock_guard<std::mutex> its_lock(subscribed_mutex_);
@@ -1866,7 +1865,7 @@ void service_discovery_impl::process_eventgroupentry(
         std::shared_ptr<eventgroupentry_impl> &_entry,
         const std::vector<std::shared_ptr<option_impl> > &_options,
         std::shared_ptr < message_impl > &its_message_response,
-        const boost::asio::ip::address &_destination,
+        const platform::ip::address &_destination,
         const std::shared_ptr<sd_message_identifier_t> &_message_id,
         bool _is_stop_subscribe_subscribe,
         bool _force_initial_events) {
@@ -1882,7 +1881,7 @@ void service_discovery_impl::process_eventgroupentry(
     bool has_two_options_ = (_entry->get_num_options(1) + _entry->get_num_options(2) >= 2) ? true : false;
 
     if (_entry->get_owning_message()->get_return_code() != return_code) {
-        boost::system::error_code ec;
+        int ec;
         VSOMEIP_ERROR << "Invalid return code in SD header "
                 << _message_id->sender_.to_string(ec) << " session: "
                 << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -1898,7 +1897,7 @@ void service_discovery_impl::process_eventgroupentry(
 
     if(its_type == entry_type_e::SUBSCRIBE_EVENTGROUP) {
         if( _destination.is_multicast() ) {
-            boost::system::error_code ec;
+            int ec;
             VSOMEIP_ERROR << "Received a SubscribeEventGroup entry on multicast address "
                     << _message_id->sender_.to_string(ec) << " session: "
                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -1913,7 +1912,7 @@ void service_discovery_impl::process_eventgroupentry(
         }
         if (_entry->get_num_options(1) == 0
                 && _entry->get_num_options(2) == 0) {
-            boost::system::error_code ec;
+            int ec;
             VSOMEIP_ERROR << "Invalid number of options in SubscribeEventGroup entry "
                     << _message_id->sender_.to_string(ec) << " session: "
                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -1927,7 +1926,7 @@ void service_discovery_impl::process_eventgroupentry(
             return;
         }
         if(_entry->get_owning_message()->get_options_length() < 12) {
-            boost::system::error_code ec;
+            int ec;
             VSOMEIP_ERROR << "Invalid options length in SD message "
                     << _message_id->sender_.to_string(ec) << " session: "
                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -1945,7 +1944,7 @@ void service_discovery_impl::process_eventgroupentry(
                  // by the + operator on 16 bit or higher machines. 
                  < static_cast<std::vector<std::shared_ptr<option_impl>>::size_type>(
                      (_entry->get_num_options(1)) + (_entry->get_num_options(2)))) {
-            boost::system::error_code ec;
+            int ec;
             VSOMEIP_ERROR << "Fewer options in SD message than "
                              "referenced in EventGroup entry or malformed option received "
                     << _message_id->sender_.to_string(ec) << " session: "
@@ -1960,7 +1959,7 @@ void service_discovery_impl::process_eventgroupentry(
         }
         if(_entry->get_owning_message()->get_someip_length() < _entry->get_owning_message()->get_length()
                 && its_ttl > 0) {
-            boost::system::error_code ec;
+            int ec;
             VSOMEIP_ERROR  << std::dec << "SomeIP length field in SubscribeEventGroup message header: ["
                                 << _entry->get_owning_message()->get_someip_length()
                                 << "] bytes, is shorter than length of deserialized message: ["
@@ -1971,10 +1970,10 @@ void service_discovery_impl::process_eventgroupentry(
         }
     }
 
-    boost::asio::ip::address its_first_address;
+    platform::ip::address its_first_address;
     uint16_t its_first_port(ILLEGAL_PORT);
     bool is_first_reliable(false);
-    boost::asio::ip::address its_second_address;
+    platform::ip::address its_second_address;
     uint16_t its_second_port(ILLEGAL_PORT);
     bool is_second_reliable(false);
 
@@ -1987,7 +1986,7 @@ void service_discovery_impl::process_eventgroupentry(
 #ifdef _WIN32
                 e; // silence MSVC warining C4101
 #endif
-                boost::system::error_code ec;
+                int ec;
                 VSOMEIP_ERROR << "Fewer options in SD message than "
                                  "referenced in EventGroup entry for "
                                  "option run number: " << i << " "
@@ -2010,7 +2009,7 @@ void service_discovery_impl::process_eventgroupentry(
                             std::dynamic_pointer_cast < ipv4_option_impl
                                     > (its_option);
 
-                    boost::asio::ip::address_v4 its_ipv4_address(
+                    platform::ip::address_v4 its_ipv4_address(
                             its_ipv4_option->get_address());
                     if (!check_layer_four_protocol(its_ipv4_option)) {
                         if( its_ttl > 0) {
@@ -2040,7 +2039,7 @@ void service_discovery_impl::process_eventgroupentry(
                                 insert_subscription_nack(its_message_response, its_service, its_instance,
                                                           its_eventgroup, its_counter, its_major, its_reserved);
                             }
-                            boost::system::error_code ec;
+                            int ec;
                             VSOMEIP_ERROR << "Multiple IPv4 endpoint options of same kind referenced! "
                                     << _message_id->sender_.to_string(ec) << " session: "
                                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_
@@ -2057,7 +2056,7 @@ void service_discovery_impl::process_eventgroupentry(
                                 insert_subscription_nack(its_message_response, its_service, its_instance,
                                                          its_eventgroup, its_counter, its_major, its_reserved);
                             }
-                            boost::system::error_code ec;
+                            int ec;
                             VSOMEIP_ERROR << "Invalid port or IP address in first IPv4 endpoint option specified! "
                                     << _message_id->sender_.to_string(ec) << " session: "
                                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -2081,7 +2080,7 @@ void service_discovery_impl::process_eventgroupentry(
                                 insert_subscription_nack(its_message_response, its_service, its_instance,
                                                           its_eventgroup, its_counter, its_major, its_reserved);
                             }
-                            boost::system::error_code ec;
+                            int ec;
                             VSOMEIP_ERROR << "Multiple IPv4 endpoint options of same kind referenced! "
                                     << _message_id->sender_.to_string(ec) << " session: "
                                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_
@@ -2098,7 +2097,7 @@ void service_discovery_impl::process_eventgroupentry(
                                 insert_subscription_nack(its_message_response, its_service, its_instance,
                                                          its_eventgroup, its_counter, its_major, its_reserved);
                             }
-                            boost::system::error_code ec;
+                            int ec;
                             VSOMEIP_ERROR << "Invalid port or IP address in second IPv4 endpoint option specified! "
                                     << _message_id->sender_.to_string(ec) << " session: "
                                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -2108,7 +2107,7 @@ void service_discovery_impl::process_eventgroupentry(
                         // TODO: error message, too many endpoint options!
                     }
                 } else {
-                    boost::system::error_code ec;
+                    int ec;
                     VSOMEIP_ERROR
                             << "Invalid eventgroup option (IPv4 Endpoint)"
                             << _message_id->sender_.to_string(ec) << " session: "
@@ -2122,7 +2121,7 @@ void service_discovery_impl::process_eventgroupentry(
                             std::dynamic_pointer_cast < ipv6_option_impl
                                     > (its_option);
 
-                    boost::asio::ip::address_v6 its_ipv6_address(
+                    platform::ip::address_v6 its_ipv6_address(
                             its_ipv6_option->get_address());
                     if (!check_layer_four_protocol(its_ipv6_option)) {
                         if(its_ttl > 0) {
@@ -2132,7 +2131,7 @@ void service_discovery_impl::process_eventgroupentry(
                             insert_subscription_nack(its_message_response, its_service, its_instance,
                                                      its_eventgroup, its_counter, its_major, its_reserved);
                         }
-                        boost::system::error_code ec;
+                        int ec;
                         VSOMEIP_ERROR << "Invalid layer 4 protocol type in IPv6 endpoint option specified! "
                                 << _message_id->sender_.to_string(ec) << " session: "
                                 << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -2154,7 +2153,7 @@ void service_discovery_impl::process_eventgroupentry(
                                 insert_subscription_nack(its_message_response, its_service, its_instance,
                                                           its_eventgroup, its_counter, its_major, its_reserved);
                             }
-                            boost::system::error_code ec;
+                            int ec;
                             VSOMEIP_ERROR << "Multiple IPv6 endpoint options of same kind referenced! "
                                     << _message_id->sender_.to_string(ec) << " session: "
                                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_
@@ -2177,7 +2176,7 @@ void service_discovery_impl::process_eventgroupentry(
                                 insert_subscription_nack(its_message_response, its_service, its_instance,
                                                           its_eventgroup, its_counter, its_major, its_reserved);
                             }
-                            boost::system::error_code ec;
+                            int ec;
                             VSOMEIP_ERROR << "Multiple IPv6 endpoint options of same kind referenced! "
                                     << _message_id->sender_.to_string(ec) << " session: "
                                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_
@@ -2188,7 +2187,7 @@ void service_discovery_impl::process_eventgroupentry(
                         // TODO: error message, too many endpoint options!
                     }
                 } else {
-                    boost::system::error_code ec;
+                    int ec;
                     VSOMEIP_ERROR
                             << "Invalid eventgroup option (IPv6 Endpoint) "
                             << _message_id->sender_.to_string(ec) << " session: "
@@ -2202,7 +2201,7 @@ void service_discovery_impl::process_eventgroupentry(
                             std::dynamic_pointer_cast < ipv4_option_impl
                                     > (its_option);
 
-                    boost::asio::ip::address_v4 its_ipv4_address(
+                    platform::ip::address_v4 its_ipv4_address(
                             its_ipv4_option->get_address());
 
                     if (its_first_port == ILLEGAL_PORT) {
@@ -2218,14 +2217,14 @@ void service_discovery_impl::process_eventgroupentry(
                     // ID: SIP_SD_946, ID: SIP_SD_1144
                     if (its_first_port != ILLEGAL_PORT
                             && its_second_port != ILLEGAL_PORT) {
-                        boost::system::error_code ec;
+                        int ec;
                         VSOMEIP_ERROR << "Multiple IPv4 multicast options referenced! "
                                 << _message_id->sender_.to_string(ec) << " session: "
                                 << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
                         return;
                     }
                 } else {
-                    boost::system::error_code ec;
+                    int ec;
                     VSOMEIP_ERROR
                             << "Invalid eventgroup option (IPv4 Multicast) "
                             << _message_id->sender_.to_string(ec) << " session: "
@@ -2238,7 +2237,7 @@ void service_discovery_impl::process_eventgroupentry(
                             std::dynamic_pointer_cast < ipv6_option_impl
                                     > (its_option);
 
-                    boost::asio::ip::address_v6 its_ipv6_address(
+                    platform::ip::address_v6 its_ipv6_address(
                             its_ipv6_option->get_address());
 
                     if (its_first_port == ILLEGAL_PORT) {
@@ -2254,14 +2253,14 @@ void service_discovery_impl::process_eventgroupentry(
                     // ID: SIP_SD_946, ID: SIP_SD_1144
                     if (its_first_port != ILLEGAL_PORT
                             && its_second_port != ILLEGAL_PORT) {
-                        boost::system::error_code ec;
+                        int ec;
                         VSOMEIP_ERROR << "Multiple IPv6 multicast options referenced! "
                                 << _message_id->sender_.to_string(ec) << " session: "
                                 << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
                         return;
                     }
                 } else {
-                    boost::system::error_code ec;
+                    int ec;
                     VSOMEIP_ERROR
                             << "Invalid eventgroup option (IPv6 Multicast) "
                             << _message_id->sender_.to_string(ec) << " session: "
@@ -2274,7 +2273,7 @@ void service_discovery_impl::process_eventgroupentry(
             }
             case option_type_e::UNKNOWN:
             default:
-                boost::system::error_code ec;
+                int ec;
                 VSOMEIP_WARNING << "Unsupported eventgroup option "
                     << _message_id->sender_.to_string(ec) << " session: "
                     << std::hex << std::setw(4) << std::setfill('0') << _message_id->session_;
@@ -2311,8 +2310,8 @@ void service_discovery_impl::process_eventgroupentry(
 void service_discovery_impl::handle_eventgroup_subscription(service_t _service,
         instance_t _instance, eventgroup_t _eventgroup, major_version_t _major,
         ttl_t _ttl, uint8_t _counter, uint16_t _reserved,
-        const boost::asio::ip::address &_first_address, uint16_t _first_port, bool _is_first_reliable,
-        const boost::asio::ip::address &_second_address, uint16_t _second_port, bool _is_second_reliable,
+        const platform::ip::address &_first_address, uint16_t _first_port, bool _is_first_reliable,
+        const platform::ip::address &_second_address, uint16_t _second_port, bool _is_second_reliable,
         std::shared_ptr < message_impl > &its_message,
         const std::shared_ptr<sd_message_identifier_t> &_message_id,
         bool _is_stop_subscribe_subscribe, bool _force_initial_events) {
@@ -2351,7 +2350,7 @@ void service_discovery_impl::handle_eventgroup_subscription(service_t _service,
             }
             insert_subscription_nack(its_message, _service, _instance,
                 _eventgroup, _counter, _major, _reserved);
-            boost::system::error_code ec;
+            int ec;
             VSOMEIP_WARNING << "Subscription for ["
                     << std::hex << std::setw(4) << std::setfill('0') << _service << "."
                     << std::hex << std::setw(4) << std::setfill('0') << _instance << "."
@@ -2379,7 +2378,7 @@ void service_discovery_impl::handle_eventgroup_subscription(service_t _service,
         if (!its_info || _major != its_info->get_major()) {
             // Create a temporary info object with TTL=0 --> send NACK
             if( its_info && (_major != its_info->get_major())) {
-                boost::system::error_code ec;
+                int ec;
                 VSOMEIP_ERROR << "Requested major version:[" << (uint32_t) _major
                         << "] in subscription to service: ["
                         << std::hex << std::setw(4) << std::setfill('0') << _service << "."
@@ -2403,7 +2402,7 @@ void service_discovery_impl::handle_eventgroup_subscription(service_t _service,
             }
             return;
         } else {
-            boost::asio::ip::address its_first_address, its_second_address;
+            platform::ip::address its_first_address, its_second_address;
             uint16_t its_first_port, its_second_port;
             if (ILLEGAL_PORT != _first_port) {
                 its_targets[0].subscriber_ = endpoint_definition::get(
@@ -2418,7 +2417,7 @@ void service_discovery_impl::handle_eventgroup_subscription(service_t _service,
                     if(_ttl > 0 && !is_tcp_connected(_service, _instance, its_targets[0].target_)) {
                         insert_subscription_nack(its_message, _service, _instance,
                             _eventgroup, _counter, _major, _reserved);
-                        boost::system::error_code ec;
+                        int ec;
                         VSOMEIP_ERROR << "TCP connection to target1: ["
                                 << its_targets[0].target_->get_address().to_string()
                                 << ":" << its_targets[0].target_->get_port()
@@ -2450,7 +2449,7 @@ void service_discovery_impl::handle_eventgroup_subscription(service_t _service,
                     if(_ttl > 0 && !is_tcp_connected(_service, _instance, its_targets[1].target_)) {
                         insert_subscription_nack(its_message, _service, _instance,
                             _eventgroup, _counter, _major, _reserved);
-                        boost::system::error_code ec;
+                        int ec;
                         VSOMEIP_ERROR << "TCP connection to target2 : ["
                                 << its_targets[1].target_->get_address().to_string()
                                 << ":" << its_targets[1].target_->get_port()
@@ -2581,7 +2580,7 @@ void service_discovery_impl::handle_eventgroup_subscription_nack(service_t _serv
 void service_discovery_impl::handle_eventgroup_subscription_ack(
         service_t _service, instance_t _instance, eventgroup_t _eventgroup,
         major_version_t _major, ttl_t _ttl, uint8_t _counter,
-        const boost::asio::ip::address &_address, uint16_t _port) {
+        const platform::ip::address &_address, uint16_t _port) {
     (void)_major;
     (void)_ttl;
     std::lock_guard<std::mutex> its_lock(subscribed_mutex_);
@@ -2627,7 +2626,7 @@ bool service_discovery_impl::is_tcp_connected(service_t _service,
 
 void service_discovery_impl::serialize_and_send(
         std::shared_ptr<message_impl> _message,
-        const boost::asio::ip::address &_address) {
+        const platform::ip::address &_address) {
     std::lock_guard<std::mutex> its_lock(serialize_mutex_);
     std::pair<session_t, bool> its_session = get_session(_address);
     _message->set_session(its_session.first);
@@ -2645,7 +2644,7 @@ void service_discovery_impl::serialize_and_send(
 
 void service_discovery_impl::start_ttl_timer() {
     std::lock_guard<std::mutex> its_lock(ttl_timer_mutex_);
-    boost::system::error_code ec;
+    int ec;
     ttl_timer_.expires_from_now(std::chrono::milliseconds(ttl_timer_runtime_), ec);
     ttl_timer_.async_wait(
             std::bind(&service_discovery_impl::check_ttl, shared_from_this(),
@@ -2654,11 +2653,11 @@ void service_discovery_impl::start_ttl_timer() {
 
 void service_discovery_impl::stop_ttl_timer() {
     std::lock_guard<std::mutex> its_lock(ttl_timer_mutex_);
-    boost::system::error_code ec;
+    int ec;
     ttl_timer_.cancel(ec);
 }
 
-void service_discovery_impl::check_ttl(const boost::system::error_code &_error) {
+void service_discovery_impl::check_ttl(const int &_error) {
     if (!_error) {
         host_->update_routing_info(ttl_timer_runtime_);
         start_ttl_timer();
@@ -2703,7 +2702,7 @@ void service_discovery_impl::send_subscriptions(service_t _service, instance_t _
         return;
     }
     std::forward_list<std::pair<std::shared_ptr<message_impl>,
-                                const boost::asio::ip::address>> subscription_messages;
+                                const platform::ip::address>> subscription_messages;
     {
         std::lock_guard<std::mutex> its_lock(subscribed_mutex_);
         auto found_service = subscribed_.find(_service);
@@ -2718,7 +2717,7 @@ void service_discovery_impl::send_subscriptions(service_t _service, instance_t _
                         std::shared_ptr<endpoint> its_unreliable;
                         std::shared_ptr<endpoint> its_reliable;
                         bool has_address(false);
-                        boost::asio::ip::address its_address;
+                        platform::ip::address its_address;
                         get_subscription_endpoints(
                                 its_unreliable, its_reliable, &its_address,
                                 &has_address, _service, _instance,
@@ -2825,7 +2824,7 @@ void service_discovery_impl::stop_subscription_expiration_timer_unlocked() {
     subscription_expiration_timer_.cancel();
 }
 
-void service_discovery_impl::expire_subscriptions(const boost::system::error_code &_error) {
+void service_discovery_impl::expire_subscriptions(const int &_error) {
     if (!_error) {
         next_subscription_expiration_ = host_->expire_subscriptions();
         start_subscription_expiration_timer();
@@ -2833,16 +2832,16 @@ void service_discovery_impl::expire_subscriptions(const boost::system::error_cod
 }
 
 bool service_discovery_impl::check_ipv4_address(
-        boost::asio::ip::address its_address) {
+        platform::ip::address its_address) {
     //Check unallowed ipv4 address
     bool is_valid = true;
     std::shared_ptr<configuration> its_configuration =
             host_->get_configuration();
 
     if(its_configuration) {
-        boost::asio::ip::address_v4::bytes_type its_unicast_address =
+        platform::ip::address_v4::bytes_type its_unicast_address =
                 its_configuration.get()->get_unicast_address().to_v4().to_bytes();
-        boost::asio::ip::address_v4::bytes_type endpoint_address =
+        platform::ip::address_v4::bytes_type endpoint_address =
                 its_address.to_v4().to_bytes();
 
         //same address as unicast address of DUT not allowed
@@ -2893,7 +2892,7 @@ void service_discovery_impl::offer_service(service_t _service,
 
 void service_discovery_impl::start_offer_debounce_timer(bool _first_start) {
     std::lock_guard<std::mutex> its_lock(offer_debounce_timer_mutex_);
-    boost::system::error_code ec;
+    int ec;
     if (_first_start) {
         offer_debounce_timer_.expires_from_now(initial_delay_, ec);
     } else {
@@ -2913,7 +2912,7 @@ void service_discovery_impl::start_offer_debounce_timer(bool _first_start) {
 
 void service_discovery_impl::start_find_debounce_timer(bool _first_start) {
     std::lock_guard<std::mutex> its_lock(find_debounce_timer_mutex_);
-    boost::system::error_code ec;
+    int ec;
     if (_first_start) {
         find_debounce_timer_.expires_from_now(initial_delay_, ec);
     } else {
@@ -2931,7 +2930,7 @@ void service_discovery_impl::start_find_debounce_timer(bool _first_start) {
 
 //initial delay
 void service_discovery_impl::on_find_debounce_timer_expired(
-        const boost::system::error_code &_error) {
+        const int &_error) {
     if(_error) { // timer was canceled
         return;
     }
@@ -2974,14 +2973,14 @@ void service_discovery_impl::on_find_debounce_timer_expired(
     std::chrono::milliseconds its_delay(repetitions_base_delay_);
     std::uint8_t its_repetitions(1);
 
-    std::shared_ptr<boost::asio::steady_timer> its_timer = std::make_shared<
-            boost::asio::steady_timer>(host_->get_io());
+    std::shared_ptr<platform::steady_timer> its_timer = std::make_shared<
+            platform::steady_timer>(host_->get_io());
     {
         std::lock_guard<std::mutex> its_lock(find_repetition_phase_timers_mutex_);
         find_repetition_phase_timers_[its_timer] = repetition_phase_finds;
     }
 
-    boost::system::error_code ec;
+    int ec;
     its_timer->expires_from_now(its_delay, ec);
     if (ec) {
         VSOMEIP_ERROR<< "service_discovery_impl::on_find_debounce_timer_expired "
@@ -2996,7 +2995,7 @@ void service_discovery_impl::on_find_debounce_timer_expired(
 }
 
 void service_discovery_impl::on_offer_debounce_timer_expired(
-        const boost::system::error_code &_error) {
+        const int &_error) {
     if(_error) { // timer was canceled
         return;
     }
@@ -3064,15 +3063,15 @@ void service_discovery_impl::on_offer_debounce_timer_expired(
         its_repetitions = 0;
     }
 
-    std::shared_ptr<boost::asio::steady_timer> its_timer = std::make_shared<
-            boost::asio::steady_timer>(host_->get_io());
+    std::shared_ptr<platform::steady_timer> its_timer = std::make_shared<
+            platform::steady_timer>(host_->get_io());
 
     {
         std::lock_guard<std::mutex> its_lock(repetition_phase_timers_mutex_);
         repetition_phase_timers_[its_timer] = repetition_phase_offers;
     }
 
-    boost::system::error_code ec;
+    int ec;
     its_timer->expires_from_now(its_delay, ec);
     if (ec) {
         VSOMEIP_ERROR<< "service_discovery_impl::on_offer_debounce_timer_expired "
@@ -3087,8 +3086,8 @@ void service_discovery_impl::on_offer_debounce_timer_expired(
 }
 
 void service_discovery_impl::on_repetition_phase_timer_expired(
-        const boost::system::error_code &_error,
-        std::shared_ptr<boost::asio::steady_timer> _timer,
+        const int &_error,
+        std::shared_ptr<platform::steady_timer> _timer,
         std::uint8_t _repetition, std::uint32_t _last_delay) {
     if (_error) {
         return;
@@ -3141,7 +3140,7 @@ void service_discovery_impl::on_repetition_phase_timer_expired(
                 move_offers_into_main_phase(_timer);
                 return;
             }
-            boost::system::error_code ec;
+            int ec;
             its_timer_pair->first->expires_from_now(new_delay, ec);
             if (ec) {
                 VSOMEIP_ERROR <<
@@ -3159,8 +3158,8 @@ void service_discovery_impl::on_repetition_phase_timer_expired(
 
 
 void service_discovery_impl::on_find_repetition_phase_timer_expired(
-        const boost::system::error_code &_error,
-        std::shared_ptr<boost::asio::steady_timer> _timer,
+        const int &_error,
+        std::shared_ptr<platform::steady_timer> _timer,
         std::uint8_t _repetition, std::uint32_t _last_delay) {
     if (_error) {
         return;
@@ -3190,7 +3189,7 @@ void service_discovery_impl::on_find_repetition_phase_timer_expired(
             find_repetition_phase_timers_.erase(its_timer_pair);
             return;
         }
-        boost::system::error_code ec;
+        int ec;
         its_timer_pair->first->expires_from_now(new_delay, ec);
         if (ec) {
             VSOMEIP_ERROR <<
@@ -3207,7 +3206,7 @@ void service_discovery_impl::on_find_repetition_phase_timer_expired(
 
 
 void service_discovery_impl::move_offers_into_main_phase(
-        const std::shared_ptr<boost::asio::steady_timer> &_timer) {
+        const std::shared_ptr<platform::steady_timer> &_timer) {
     // HINT: make sure to lock the repetition_phase_timers_mutex_ before calling
     // this function
     // set flag on all serviceinfos bound to this timer
@@ -3365,7 +3364,7 @@ bool service_discovery_impl::send_stop_offer(
 
 void service_discovery_impl::start_main_phase_timer() {
     std::lock_guard<std::mutex> its_lock(main_phase_timer_mutex_);
-    boost::system::error_code ec;
+    int ec;
     main_phase_timer_.expires_from_now(cyclic_offer_delay_);
     if (ec) {
         VSOMEIP_ERROR<< "service_discovery_impl::start_main_phase_timer "
@@ -3377,7 +3376,7 @@ void service_discovery_impl::start_main_phase_timer() {
 }
 
 void service_discovery_impl::on_main_phase_timer_expired(
-        const boost::system::error_code &_error) {
+        const int &_error) {
     if (_error) {
         return;
     }
@@ -3418,13 +3417,13 @@ bool service_discovery_impl::last_offer_shorter_half_offer_delay_ago() {
 }
 
 bool service_discovery_impl::check_source_address(
-        const boost::asio::ip::address &its_source_address) const {
+        const platform::ip::address &its_source_address) const {
    bool is_valid = true;
    std::shared_ptr<configuration> its_configuration =
            host_->get_configuration();
 
    if(its_configuration) {
-       boost::asio::ip::address its_unicast_address =
+       platform::ip::address its_unicast_address =
                its_configuration.get()->get_unicast_address();
        // check if source address is same as nodes unicast address
        if(its_unicast_address
@@ -3660,7 +3659,7 @@ configuration::ttl_factor_t service_discovery_impl::get_ttl_factor(
 }
 
 void service_discovery_impl::on_last_msg_received_timer_expired(
-        const boost::system::error_code &_error) {
+        const int &_error) {
     if (!_error) {
         // we didn't receive a multicast message within 110% of the cyclic_offer_delay_
         VSOMEIP_WARNING << "Didn't receive a multicast SD message for " <<
@@ -3670,7 +3669,7 @@ void service_discovery_impl::on_last_msg_received_timer_expired(
             endpoint_->join(sd_multicast_);
         }
         {
-            boost::system::error_code ec;
+            int ec;
             std::lock_guard<std::mutex> its_lock(last_msg_received_timer_mutex_);
             last_msg_received_timer_.expires_from_now(last_msg_received_timer_timeout_, ec);
             last_msg_received_timer_.async_wait(
@@ -3683,7 +3682,7 @@ void service_discovery_impl::on_last_msg_received_timer_expired(
 
 void service_discovery_impl::stop_last_msg_received_timer() {
     std::lock_guard<std::mutex> its_lock(last_msg_received_timer_mutex_);
-    boost::system::error_code ec;
+    int ec;
     last_msg_received_timer_.cancel(ec);
 }
 
@@ -3700,8 +3699,8 @@ service_discovery_impl::remote_offer_type_e service_discovery_impl::get_remote_o
 bool service_discovery_impl::update_remote_offer_type(
         service_t _service, instance_t _instance,
         remote_offer_type_e _offer_type,
-        const boost::asio::ip::address &_reliable_address,
-        const boost::asio::ip::address &_unreliable_address) {
+        const platform::ip::address &_reliable_address,
+        const platform::ip::address &_unreliable_address) {
     bool ret(false);
     std::lock_guard<std::mutex> its_lock(remote_offer_types_mutex_);
     const std::pair<service_t, instance_t> its_si_pair = std::make_pair(_service, _instance);
@@ -3737,7 +3736,7 @@ bool service_discovery_impl::update_remote_offer_type(
 
 void service_discovery_impl::remove_remote_offer_type(
         service_t _service, instance_t _instance,
-        const boost::asio::ip::address &_address) {
+        const platform::ip::address &_address) {
     std::lock_guard<std::mutex> its_lock(remote_offer_types_mutex_);
     const std::pair<service_t, instance_t> its_si_pair =
             std::make_pair(_service, _instance);
@@ -3749,7 +3748,7 @@ void service_discovery_impl::remove_remote_offer_type(
 }
 
 void service_discovery_impl::remove_remote_offer_type_by_ip(
-        const boost::asio::ip::address &_address) {
+        const platform::ip::address &_address) {
     std::lock_guard<std::mutex> its_lock(remote_offer_types_mutex_);
     auto found_services = remote_offers_by_ip_.find(_address);
     if (found_services != remote_offers_by_ip_.end()) {

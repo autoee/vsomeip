@@ -8,7 +8,7 @@
 
 #include <map>
 #include <memory>
-#include <boost/asio/ip/address.hpp>
+#include "../../platform/platform.hpp"
 
 #include <vsomeip/primitive_types.hpp>
 #include <vsomeip/constants.hpp>
@@ -42,8 +42,8 @@ enum class registration_type_e : std::uint8_t {
 
 struct sd_message_identifier_t {
     sd_message_identifier_t(session_t _session,
-                            boost::asio::ip::address _sender,
-                            boost::asio::ip::address _destination,
+                            platform::ip::address _sender,
+                            platform::ip::address _destination,
                             const std::shared_ptr<sd::message_impl> &_response) :
             session_(_session),
             sender_(_sender),
@@ -53,8 +53,8 @@ struct sd_message_identifier_t {
 
     sd_message_identifier_t() :
         session_(0),
-        sender_(boost::asio::ip::address()),
-        destination_(boost::asio::ip::address()),
+        sender_(platform::ip::address()),
+        destination_(platform::ip::address()),
         response_(std::shared_ptr<sd::message_impl>()) {
     }
 
@@ -76,8 +76,8 @@ struct sd_message_identifier_t {
     }
 
     session_t session_;
-    boost::asio::ip::address sender_;
-    boost::asio::ip::address destination_;
+    platform::ip::address sender_;
+    platform::ip::address destination_;
     std::shared_ptr<sd::message_impl> response_;
 };
 

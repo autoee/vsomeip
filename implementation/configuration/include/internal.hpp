@@ -40,7 +40,7 @@
 #define VSOMEIP_SD_LIBRARY                      "libvsomeip-sd.so.@VSOMEIP_MAJOR_VERSION@"
 #endif
 
-#define VSOMEIP_ROUTING                         "@VSOMEIP_ROUTING@"
+#define VSOMEIP_ROUTING                         "172.18.0.200"
 #define VSOMEIP_ROUTING_CLIENT                  0
 #define VSOMEIP_ROUTING_INFO_SIZE_INIT          256
 
@@ -49,7 +49,7 @@
 #define __func__ __FUNCTION__
 #endif
 
-#define VSOMEIP_UNICAST_ADDRESS                 "@VSOMEIP_UNICAST_ADDRESS@"
+#define VSOMEIP_UNICAST_ADDRESS                 "224.244.224.245"
 
 #define VSOMEIP_DEFAULT_CONNECT_TIMEOUT         100
 #define VSOMEIP_MAX_CONNECT_TIMEOUT             1600
@@ -135,12 +135,12 @@
 #endif
 
 #define VSOMEIP_DATA_ID                         0x677D
-#define VSOMEIP_DIAGNOSIS_ADDRESS               @VSOMEIP_DIAGNOSIS_ADDRESS@
+#define VSOMEIP_DIAGNOSIS_ADDRESS               0x00
 
 #define VSOMEIP_DEFAULT_SHM_PERMISSION          0666
 #define VSOMEIP_DEFAULT_UMASK_LOCAL_ENDPOINTS   0000
 
-#define VSOMEIP_ROUTING_READY_MESSAGE           "@VSOMEIP_ROUTING_READY_MESSAGE@"
+#define VSOMEIP_ROUTING_READY_MESSAGE           "SOME/IP routing ready."
 
 namespace vsomeip {
 

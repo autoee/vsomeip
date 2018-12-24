@@ -11,7 +11,7 @@
 #include <atomic>
 #include <mutex>
 
-#include <boost/asio/ip/address.hpp>
+#include "../../platform/platform.hpp"
 #include <vsomeip/primitive_types.hpp>
 
 #include <vsomeip/export.hpp>
@@ -21,10 +21,10 @@ namespace vsomeip {
 class endpoint_definition {
 public:
     VSOMEIP_EXPORT static std::shared_ptr<endpoint_definition> get(
-            const boost::asio::ip::address &_address,
+            const platform::ip::address &_address,
             uint16_t _port, bool _is_reliable, service_t _service, instance_t _instance);
 
-    VSOMEIP_EXPORT const boost::asio::ip::address &get_address() const;
+    VSOMEIP_EXPORT const platform::ip::address &get_address() const;
 
     VSOMEIP_EXPORT uint16_t get_port() const;
 
@@ -34,17 +34,17 @@ public:
     VSOMEIP_EXPORT bool is_reliable() const;
 
     VSOMEIP_EXPORT endpoint_definition(
-            const boost::asio::ip::address &_address,
+            const platform::ip::address &_address,
             uint16_t _port, bool _is_reliable);
 private:
-    boost::asio::ip::address address_;
+    platform::ip::address address_;
     uint16_t port_;
     std::atomic<uint16_t> remote_port_;
     bool is_reliable_;
 
     static std::mutex definitions_mutex_;
     static std::map<
-        std::tuple<service_t, instance_t, boost::asio::ip::address, uint16_t, bool>,
+        std::tuple<service_t, instance_t, platform::ip::address, uint16_t, bool>,
         std::shared_ptr<endpoint_definition> > definitions_;
 };
 

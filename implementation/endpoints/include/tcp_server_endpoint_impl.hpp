@@ -9,18 +9,16 @@
 #include <map>
 #include <memory>
 
-#include <boost/asio/ip/tcp.hpp>
-
 #include <vsomeip/defines.hpp>
 #include <vsomeip/export.hpp>
 #include "server_endpoint_impl.hpp"
-
+#include "../../platform/platform.hpp"
 #include <chrono>
 
 namespace vsomeip {
 
 typedef server_endpoint_impl<
-            boost::asio::ip::tcp
+            platform::ip::tcp
         > tcp_server_endpoint_base_impl;
 
 class tcp_server_endpoint_impl: public tcp_server_endpoint_base_impl {
@@ -28,7 +26,7 @@ class tcp_server_endpoint_impl: public tcp_server_endpoint_base_impl {
 public:
     tcp_server_endpoint_impl(std::shared_ptr<endpoint_host> _host,
                              endpoint_type _local,
-                             boost::asio::io_service &_io,
+							 platform::io_service &_io,
                              std::uint32_t _max_message_size,
                              std::uint32_t _buffer_shrink_threshold,
                              std::chrono::milliseconds _send_timeout,
@@ -66,7 +64,7 @@ private:
                           std::uint32_t _max_message_size,
                           std::uint32_t _buffer_shrink_threshold,
                           bool _magic_cookies_enabled,
-                          boost::asio::io_service & _io_service,
+                          platform::io_service & _io_service,
                           std::chrono::milliseconds _send_timeout);
         socket_type & get_socket();
         std::unique_lock<std::mutex> get_socket_lock();
@@ -87,17 +85,17 @@ private:
                    std::uint32_t _recv_buffer_size_initial,
                    std::uint32_t _buffer_shrink_threshold,
                    bool _magic_cookies_enabled,
-                   boost::asio::io_service & _io_service,
+                   platform::io_service & _io_service,
                    std::chrono::milliseconds _send_timeout);
         bool send_magic_cookie(message_buffer_ptr_t &_buffer);
         bool is_magic_cookie(size_t _offset) const;
-        void receive_cbk(boost::system::error_code const &_error,
+        void receive_cbk(int const &_error,
                          std::size_t _bytes);
         void calculate_shrink_count();
         const std::string get_address_port_local() const;
         void handle_recv_buffer_exception(const std::exception &_e);
         std::size_t write_completion_condition(
-                const boost::system::error_code& _error,
+                const int& _error,
                 std::size_t _bytes_transferred, std::size_t _bytes_to_send,
                 service_t _service, method_t _method, client_t _client, session_t _session,
                 std::chrono::steady_clock::time_point _start);
@@ -117,7 +115,7 @@ private:
         const std::uint32_t buffer_shrink_threshold_;
 
         endpoint_type remote_;
-        boost::asio::ip::address remote_address_;
+        platform::ip::address remote_address_;
         std::uint16_t remote_port_;
         std::atomic<bool> magic_cookies_enabled_;
         std::chrono::steady_clock::time_point last_cookie_sent_;
@@ -126,7 +124,7 @@ private:
     };
 
     std::mutex acceptor_mutex_;
-    boost::asio::ip::tcp::acceptor acceptor_;
+    platform::ip::tcp::acceptor acceptor_;
     std::mutex connections_mutex_;
     typedef std::map<endpoint_type, connection::ptr> connections_t;
     connections_t connections_;
@@ -137,7 +135,7 @@ private:
 private:
     void remove_connection(connection *_connection);
     void accept_cbk(connection::ptr _connection,
-                    boost::system::error_code const &_error);
+                    int const &_error);
     std::string get_remote_information(
             const queue_iterator_type _queue_iterator) const;
 };

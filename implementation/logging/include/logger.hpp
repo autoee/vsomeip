@@ -7,13 +7,17 @@
 #define VSOMEIP_LOGGER_HPP
 
 #include <string>
-
-#ifdef _WIN32
 #include <iostream>
-#endif
-
 #include <vsomeip/export.hpp>
 
+#ifdef USE_LWIP
+#define VSOMEIP_FATAL std::cerr
+#define VSOMEIP_ERROR std::cerr
+#define VSOMEIP_WARNING std::cerr
+#define VSOMEIP_INFO std::cout
+#define VSOMEIP_DEBUG std::cout
+#define VSOMEIP_TRACE std::cout
+#else
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/trivial.hpp>
 
@@ -44,5 +48,6 @@ public:
                 boost::log::trivial::severity_level::trace)
 
 } // namespace vsomeip
+#endif
 
 #endif // VSOMEIP_LOGGER_HPP

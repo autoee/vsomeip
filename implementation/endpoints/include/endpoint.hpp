@@ -6,11 +6,11 @@
 #ifndef VSOMEIP_ENDPOINT_HPP
 #define VSOMEIP_ENDPOINT_HPP
 
-#include <boost/asio/ip/address.hpp>
-
 #include <vsomeip/primitive_types.hpp>
 
 #include <vector>
+
+#include "../../platform/platform.hpp"
 
 namespace vsomeip {
 
@@ -18,7 +18,7 @@ class endpoint_definition;
 
 class endpoint {
 public:
-    typedef std::function<void()> error_handler_t;
+    typedef void (*error_handler_t) (void);
 
     virtual ~endpoint() {}
 

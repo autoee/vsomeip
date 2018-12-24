@@ -11,9 +11,6 @@
 #include <set>
 #include <string>
 
-#include <boost/asio/ip/address.hpp>
-#include <boost/log/trivial.hpp>
-
 #include <vsomeip/export.hpp>
 #include <vsomeip/defines.hpp>
 #include <vsomeip/plugin.hpp>
@@ -23,6 +20,7 @@
 #include "trace.hpp"
 
 #include "../../e2e_protection/include/e2exf/config.hpp"
+#include "../../platform/platform.hpp"
 #include "e2e.hpp"
 
 #include "debounce.hpp"
@@ -41,7 +39,7 @@ public:
 
     virtual const std::string &get_network() const = 0;
 
-    virtual const boost::asio::ip::address & get_unicast_address() const = 0;
+    virtual const platform::ip::address & get_unicast_address() const = 0;
     virtual unsigned short get_diagnosis_address() const = 0;
     virtual std::uint16_t get_diagnosis_mask() const = 0;
     virtual bool is_v4() const = 0;
@@ -51,7 +49,7 @@ public:
     virtual bool has_file_log() const = 0;
     virtual bool has_dlt_log() const = 0;
     virtual const std::string & get_logfile() const = 0;
-    virtual boost::log::trivial::severity_level get_loglevel() const = 0;
+    virtual int get_loglevel() const = 0;
 
     virtual const std::string & get_routing_host() const = 0;
 
@@ -91,7 +89,7 @@ public:
                                                     std::uint16_t _port) const = 0;
     virtual std::uint32_t get_buffer_shrink_threshold() const = 0;
 
-    virtual bool supports_selective_broadcasts(boost::asio::ip::address _address) const = 0;
+    virtual bool supports_selective_broadcasts(platform::ip::address _address) const = 0;
 
     virtual bool is_offered_remote(service_t _service, instance_t _instance) const = 0;
 

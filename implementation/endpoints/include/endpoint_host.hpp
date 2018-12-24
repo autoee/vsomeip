@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include <boost/asio/ip/address.hpp>
+#include "../../platform/platform.hpp"
 #include "../../configuration/include/internal.hpp"
 
 #include <vsomeip/primitive_types.hpp>
@@ -26,14 +26,14 @@ public:
     virtual void on_connect(std::shared_ptr<endpoint> _endpoint) = 0;
     virtual void on_disconnect(std::shared_ptr<endpoint> _endpoint) = 0;
     virtual void on_message(const byte_t *_data, length_t _length,
-        endpoint *_receiver, const boost::asio::ip::address &_destination
-            = boost::asio::ip::address(),
+        endpoint *_receiver, const platform::ip::address &_destination
+            = platform::ip::address(),
             client_t _bound_client = VSOMEIP_ROUTING_CLIENT,
-            const boost::asio::ip::address &_remote_address = boost::asio::ip::address(),
+            const platform::ip::address &_remote_address = platform::ip::address(),
             std::uint16_t _remote_port = 0) = 0;
     virtual void on_error(const byte_t *_data, length_t _length,
                           endpoint *_receiver,
-                          const boost::asio::ip::address &_remote_address,
+                          const platform::ip::address &_remote_address,
                           std::uint16_t _remote_port) = 0;
     virtual void release_port(uint16_t _port, bool _reliable) = 0;
     virtual client_t get_client() const = 0;

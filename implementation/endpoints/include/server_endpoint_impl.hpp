@@ -13,8 +13,7 @@
 #include <set>
 #include <vector>
 
-#include <boost/array.hpp>
-#include <boost/asio/io_service.hpp>
+#include "../../platform/platform.hpp"
 
 #include "buffer.hpp"
 #include "endpoint_impl.hpp"
@@ -31,7 +30,7 @@ public:
     typedef typename queue_type::iterator queue_iterator_type;
 
     server_endpoint_impl(std::shared_ptr<endpoint_host> _host,
-                         endpoint_type _local, boost::asio::io_service &_io,
+                         endpoint_type _local, platform::io_service &_io,
                          std::uint32_t _max_message_size,
                          configuration::endpoint_queue_limit_t _queue_limit);
     virtual ~server_endpoint_impl();
@@ -48,11 +47,11 @@ public:
     bool flush(endpoint_type _target);
 
 public:
-    void connect_cbk(boost::system::error_code const &_error);
+    void connect_cbk(int const &_error);
     void send_cbk(const queue_iterator_type _queue_iterator,
-                  boost::system::error_code const &_error, std::size_t _bytes);
+                  int const &_error, std::size_t _bytes);
     void flush_cbk(endpoint_type _target,
-                   const boost::system::error_code &_error);
+                   const int &_error);
 
 public:
     virtual bool send_intern(endpoint_type _target, const byte_t *_data,
@@ -72,7 +71,7 @@ protected:
     std::map<client_t, std::map<session_t, endpoint_type> > clients_;
     std::map<endpoint_type, client_t> endpoint_to_client_;
 
-    boost::asio::steady_timer flush_timer_;
+    platform::steady_timer flush_timer_;
 
     std::mutex mutex_;
 

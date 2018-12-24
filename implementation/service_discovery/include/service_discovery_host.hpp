@@ -9,14 +9,13 @@
 #include <map>
 #include <memory>
 #include <chrono>
-
-#include <boost/asio/ip/address.hpp>
-#include <boost/asio/io_service.hpp>
+#include <functional>
 
 #include "../../routing/include/types.hpp"
 
 #include <vsomeip/message.hpp>
 
+#include "../../platform/platform.hpp"
 namespace vsomeip {
 
 class configuration;
@@ -30,7 +29,7 @@ public:
     virtual ~service_discovery_host() {
     }
 
-    virtual boost::asio::io_service & get_io() = 0;
+    virtual platform::io_service & get_io() = 0;
     virtual const std::shared_ptr<configuration> get_configuration() const = 0;
 
     virtual std::shared_ptr<endpoint> create_service_discovery_endpoint(
@@ -48,9 +47,9 @@ public:
 
     virtual void add_routing_info(service_t _service, instance_t _instance,
             major_version_t _major, minor_version_t _minor, ttl_t _ttl,
-            const boost::asio::ip::address &_reliable_address,
+            platform::ip::address &_reliable_address,
             uint16_t _reliable_port,
-            const boost::asio::ip::address &_unreliable_address,
+            platform::ip::address &_unreliable_address,
             uint16_t _unreliable_port) = 0;
 
     virtual void del_routing_info(service_t _service, instance_t _instance,
@@ -63,7 +62,7 @@ public:
             std::shared_ptr<endpoint_definition> _target) = 0;
 
     virtual void on_subscribe_ack(service_t _service, instance_t _instance,
-            const boost::asio::ip::address &_address, uint16_t _port) = 0;
+            platform::ip::address &_address, uint16_t _port) = 0;
 
     virtual void on_subscribe_ack(client_t _client,
             service_t _service, instance_t _instance, eventgroup_t _eventgroup,
@@ -73,8 +72,8 @@ public:
             service_t _service, instance_t _instance,
             bool _reliable, client_t _client) = 0;
 
-    virtual void expire_subscriptions(const boost::asio::ip::address &_address) = 0;
-    virtual void expire_services(const boost::asio::ip::address &_address) = 0;
+    virtual void expire_subscriptions(platform::ip::address &_address) = 0;
+    virtual void expire_services(platform::ip::address &_address) = 0;
 
     virtual void on_remote_subscription(
             service_t _service, instance_t _instance, eventgroup_t _eventgroup,
